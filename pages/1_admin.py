@@ -3,9 +3,6 @@ import json
 from pathlib import Path
 from datetime import datetime
 
-# -----------------------------
-# 기본 설정
-# -----------------------------
 st.set_page_config(
     page_title="관리자 페이지",
     page_icon="🔧",
@@ -14,9 +11,6 @@ st.set_page_config(
 
 DATA_PATH = Path(__file__).parent.parent / "knowledge_base.json"
 
-# -----------------------------
-# 기본 데이터
-# -----------------------------
 DEFAULT_DATA = {
     "manuals": {
         "① 개설 및 입출금": {
@@ -62,39 +56,31 @@ DEFAULT_DATA = {
     },
     "promotions": [],
     "last_updated": "",
+    "updated_by": ""
 }
 
-# -----------------------------
-# 데이터 로드
-# -----------------------------
+
 def load_data():
     if DATA_PATH.exists():
         with open(DATA_PATH, "r", encoding="utf-8") as f:
             return json.load(f)
     return DEFAULT_DATA
 
+
 def save_data(data):
     data["last_updated"] = datetime.now().strftime("%Y-%m-%d %H:%M")
     with open(DATA_PATH, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
 
+
 data = load_data()
 
-# -----------------------------
-# UI 시작
-# -----------------------------
 st.title("🔧 관리자 페이지")
-
-# 홈 이동 버튼
 st.page_link("app.py", label="🏠 홈페이지 이동")
 
-# -----------------------------
-# 매뉴얼 관리
-# -----------------------------
 st.subheader("📘 PDA 매뉴얼 관리")
 
 sections = list(data["manuals"].keys())
-
 selected = st.selectbox("섹션 선택", sections)
 
 manual = data["manuals"][selected]
@@ -105,12 +91,11 @@ content = st.text_area("내용", value=manual["content"], height=200)
 if st.button("저장"):
     data["manuals"][selected]["title"] = title
     data["manuals"][selected]["content"] = content
+    data["updated_by"] = "관리자"
     save_data(data)
     st.success("저장 완료!")
+    st.rerun()
 
-# -----------------------------
-# 새 섹션 추가
-# -----------------------------
 st.markdown("---")
 st.subheader("➕ 새 섹션 추가")
 
@@ -123,13 +108,11 @@ if st.button("추가"):
             "content": "",
             "faq": []
         }
+        data["updated_by"] = "관리자"
         save_data(data)
         st.success("섹션 추가 완료!")
         st.rerun()
 
-# -----------------------------
-# 프로모션 관리
-# -----------------------------
 st.markdown("---")
 st.subheader("🎁 프로모션 관리")
 
@@ -140,16 +123,15 @@ if st.button("프로모션 추가"):
     if promo_name:
         data["promotions"].append({
             "name": promo_name,
-            "rule": promo_rule
+            "period": "",
+            "rule": promo_rule,
+            "updated_at": datetime.now().strftime("%Y-%m-%d")
         })
+        data["updated_by"] = "관리자"
         save_data(data)
-        st.success("추가 완료!")
+        st.success("프로모션 추가 완료!")
         st.rerun()
 
-# -----------------------------
-# 데이터 확인
-# -----------------------------
 st.markdown("---")
 st.subheader("📊 현재 데이터")
-
 st.json(data)
